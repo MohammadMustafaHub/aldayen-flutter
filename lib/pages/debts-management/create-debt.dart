@@ -1,4 +1,6 @@
+import 'package:aldayen/services/customer_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class CreateDebtPage extends StatefulWidget {
   const CreateDebtPage({Key? key}) : super(key: key);
@@ -16,6 +18,13 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
 
   DateTime? _selectedDate;
   bool _isLoading = false;
+  late final CustomerService _customerService;
+
+  @override
+  void initState() {
+    super.initState();
+    _customerService = GetIt.I<CustomerService>();
+  }
 
   @override
   void dispose() {
@@ -54,35 +63,70 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
 
   void _handleCreateDebt() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('الرجاء اختيار تاريخ الاستحقاق'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate API call
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
+      _createDebt();
+    }
+  }
 
+  Future<void> _createDebt() async {
+    try {
+      final amount = double.parse(_amountController.text);
+
+      final result = await _customerService.createCustomer(
+        _nameController.text,
+        _phoneController.text.isNotEmpty ? _phoneController.text : null,
+        amount,
+        _notesController.text.isNotEmpty ? _notesController.text : null,
+        _selectedDate,
+      );
+
+      result.match(
+        (error) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('فشل في إضافة الدين'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (customer) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم إضافة الدين بنجاح'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pop(context);
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم إضافة الدين بنجاح'),
-            backgroundColor: Colors.green,
+            content: Text('حدث خطأ غير متوقع'),
+            backgroundColor: Colors.red,
           ),
         );
-
-        Navigator.pop(context);
-      });
+      }
     }
   }
 
@@ -182,7 +226,7 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                     keyboardType: TextInputType.phone,
                     style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
-                      labelText: 'رقم الهاتف',
+                      labelText: 'رقم الهاتف (اختياري)',
                       hintText: '05xxxxxxxx',
                       prefixIcon: const Icon(
                         Icons.phone,
@@ -207,10 +251,9 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                       fillColor: Colors.grey[50],
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال رقم الهاتف';
-                      }
-                      if (value.length < 10) {
+                      if (value != null &&
+                          value.isNotEmpty &&
+                          value.length < 10) {
                         return 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل';
                       }
                       return null;
@@ -232,7 +275,7 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                         Icons.attach_money,
                         color: Color(0xFF003366),
                       ),
-                      suffixText: 'ر.س',
+                      suffixText: 'د.ع',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -287,7 +330,7 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                           Expanded(
                             child: Text(
                               _selectedDate == null
-                                  ? 'تاريخ الاستحقاق'
+                                  ? 'تاريخ الاستحقاق (اختياري)'
                                   : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
                               style: TextStyle(
                                 fontSize: 16,

@@ -1,4 +1,9 @@
+import 'package:aldayen/models/transaction.dart';
+import 'package:aldayen/models/customer.dart';
+import 'package:aldayen/components/transaction_card.dart';
+import 'package:aldayen/services/customer_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class UpdateDebtPage extends StatefulWidget {
   final String debtId;
@@ -15,50 +20,19 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _transactionAmountController = TextEditingController();
+  final _notesController = TextEditingController();
 
   late TabController _tabController;
-  double _totalDebt = 0;
-  double _totalPaid = 0;
+  final CustomerService _customerService = GetIt.I<CustomerService>();
+
+  CustomerWithTransactions? _customerData;
+  List<Transaction> _transactions = [];
   double _remaining = 0;
   bool _isLoading = false;
   bool _isLoadingData = true;
   String _transactionType = 'deposit'; // 'deposit' or 'add_debt'
-
-  // Fake transactions history
-  final List<Map<String, dynamic>> _transactions = [
-    {
-      'id': '1',
-      'type': 'debt',
-      'amount': 5000.00,
-      'date': '2025-09-15',
-      'time': '10:30 ص',
-      'notes': 'دين أولي',
-    },
-    {
-      'id': '2',
-      'type': 'debt',
-      'amount': 3000.00,
-      'date': '2025-09-20',
-      'time': '02:15 م',
-      'notes': 'دين إضافي',
-    },
-    {
-      'id': '3',
-      'type': 'deposit',
-      'amount': 2000.00,
-      'date': '2025-10-05',
-      'time': '11:00 ص',
-      'notes': 'دفعة أولى',
-    },
-    {
-      'id': '4',
-      'type': 'deposit',
-      'amount': 1000.00,
-      'date': '2025-10-15',
-      'time': '03:45 م',
-      'notes': 'دفعة ثانية',
-    },
-  ];
+  String? _errorMessage;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -73,44 +47,111 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
     _nameController.dispose();
     _phoneController.dispose();
     _transactionAmountController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
-  // Load fake data based on ID
-  void _loadDebtData() {
-    // Simulate API call to fetch debt data
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        // Fake data based on ID
-        _nameController.text = 'محمد أحمد';
-        _phoneController.text = '0501234567';
-        _totalDebt = 8000.00;
-        _totalPaid = 3000.00;
-        _remaining = 5000.00;
-        _isLoadingData = false;
-      });
+  // Load customer data from API
+  Future<void> _loadDebtData() async {
+    setState(() {
+      _isLoadingData = true;
+      _errorMessage = null;
     });
+
+    final result = await _customerService.fetchCustomerById(widget.debtId);
+
+    result.fold(
+      (error) {
+        setState(() {
+          _errorMessage = 'حدث خطأ أثناء تحميل البيانات';
+          _isLoadingData = false;
+        });
+      },
+      (customerData) {
+        setState(() {
+          _customerData = customerData;
+          _nameController.text = customerData.customer.name;
+          _phoneController.text = customerData.customer.phoneNumber ?? '';
+          _notesController.text = customerData.customer.note ?? '';
+          _selectedDate = customerData.customer.paymentDue;
+          _transactions = customerData.transactions;
+          _remaining = customerData.customer.totalDebt;
+          _isLoadingData = false;
+        });
+      },
+    );
   }
 
-  void _handleUpdateInfo() {
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF003366),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF003366),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _handleUpdateInfo() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate API call to update debtor info
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          _isLoading = false;
-        });
+      final result = await _customerService.updateCustomer(
+        widget.debtId,
+        _nameController.text,
+        _phoneController.text,
+        _selectedDate,
+        _notesController.text.isNotEmpty ? _notesController.text : null,
+      );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تحديث معلومات المدين بنجاح'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      setState(() {
+        _isLoading = false;
       });
+
+      result.fold(
+        (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('حدث خطأ أثناء تحديث البيانات'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (updatedCustomer) {
+          // Update local customer data
+          if (_customerData != null) {
+            _customerData = CustomerWithTransactions(
+              customer: updatedCustomer,
+              transactions: _customerData!.transactions,
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم تحديث معلومات المدين بنجاح'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      );
     }
   }
 
@@ -318,7 +359,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                             suffixIcon: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
-                                'ر.س',
+                                'د.ع',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -398,28 +439,25 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                                   // Simulate adding transaction
                                   setState(() {
                                     if (_transactionType == 'deposit') {
-                                      _totalPaid += amount;
                                       _remaining -= amount;
                                     } else {
-                                      _totalDebt += amount;
                                       _remaining += amount;
                                     }
 
                                     // Add to transactions list
-                                    _transactions.insert(0, {
-                                      'id': DateTime.now()
-                                          .millisecondsSinceEpoch
-                                          .toString(),
-                                      'type': _transactionType,
-                                      'amount': amount,
-                                      'date': DateTime.now().toString().split(
-                                        ' ',
-                                      )[0],
-                                      'time': TimeOfDay.now().format(context),
-                                      'notes': _transactionType == 'deposit'
-                                          ? 'إيداع'
-                                          : 'دين جديد',
-                                    });
+                                    _transactions.insert(
+                                      0,
+                                      Transaction(
+                                        id: DateTime.now()
+                                            .millisecondsSinceEpoch
+                                            .toString(),
+                                        type: _transactionType == 'deposit'
+                                            ? TransactionType.payment
+                                            : TransactionType.debit,
+                                        amount: amount,
+                                        createdAt: DateTime.now(),
+                                      ),
+                                    );
                                   });
 
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -561,6 +599,35 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
             ? const Center(
                 child: CircularProgressIndicator(color: Color(0xFF003366)),
               )
+            : _errorMessage != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _loadDebtData,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('إعادة المحاولة'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
             : TabBarView(
                 controller: _tabController,
                 children: [_buildDebtorInfoTab(), _buildTransactionsTab()],
@@ -603,27 +670,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
               ),
               const SizedBox(height: 24),
 
-              // Debt Summary Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryCard(
-                      'إجمالي الدين',
-                      _totalDebt,
-                      Colors.red,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSummaryCard(
-                      'المدفوع',
-                      _totalPaid,
-                      Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              // Debt Summary Card
               _buildSummaryCard(
                 'المتبقي',
                 _remaining,
@@ -680,7 +727,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: 'رقم الهاتف',
+                  labelText: 'رقم الهاتف (اختياري)',
                   hintText: '05xxxxxxxx',
                   prefixIcon: const Icon(Icons.phone, color: Color(0xFF003366)),
                   border: OutlineInputBorder(
@@ -702,14 +749,95 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                   fillColor: Colors.white,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'الرجاء إدخال رقم الهاتف';
-                  }
-                  if (value.length < 10) {
+                  if (value != null && value.isNotEmpty && value.length < 10) {
                     return 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل';
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 20),
+
+              // Due Date Field
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today,
+                        color: Color(0xFF003366),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          _selectedDate == null
+                              ? 'تاريخ الاستحقاق (اختياري)'
+                              : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _selectedDate == null
+                                ? Colors.grey[600]
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                      if (_selectedDate != null)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _selectedDate = null;
+                            });
+                          },
+                          color: Colors.grey[600],
+                        ),
+                      Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Notes Field
+              TextFormField(
+                controller: _notesController,
+                keyboardType: TextInputType.multiline,
+                maxLines: 4,
+                style: const TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  labelText: 'ملاحظات (اختياري)',
+                  hintText: 'أضف أي ملاحظات إضافية...',
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.only(bottom: 60),
+                    child: Icon(Icons.note_outlined, color: Color(0xFF003366)),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF003366),
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
               ),
               const SizedBox(height: 32),
 
@@ -787,123 +915,9 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
               itemCount: _transactions.length,
               itemBuilder: (context, index) {
                 final transaction = _transactions[index];
-                return _buildTransactionCard(transaction);
+                return TransactionCard(transaction: transaction);
               },
             ),
-    );
-  }
-
-  Widget _buildTransactionCard(Map<String, dynamic> transaction) {
-    final isDeposit = transaction['type'] == 'deposit';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDeposit
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isDeposit ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isDeposit ? Colors.green : Colors.red,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      isDeposit ? 'إيداع' : 'دين جديد',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDeposit ? Colors.green : Colors.red,
-                      ),
-                    ),
-                    Text(
-                      '${transaction['amount'].toStringAsFixed(2)} ر.س',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDeposit ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      transaction['date'],
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      transaction['time'],
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                if (transaction['notes'] != null &&
-                    transaction['notes'].toString().isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.note_outlined,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          transaction['notes'],
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[700],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -932,7 +946,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
           ),
           const SizedBox(height: 8),
           Text(
-            '${amount.toStringAsFixed(2)} ر.س',
+            '${amount.toStringAsFixed(2)} د.ع',
             style: TextStyle(
               fontSize: isLarge ? 24 : 20,
               fontWeight: FontWeight.bold,

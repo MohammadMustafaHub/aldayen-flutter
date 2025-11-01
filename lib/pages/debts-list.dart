@@ -1,6 +1,9 @@
+import 'package:aldayen/models/customer.dart';
 import 'package:aldayen/pages/debts-management/create-debt.dart';
 import 'package:aldayen/pages/debts-management/update-debt.dart';
+import 'package:aldayen/services/customer_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class DebtsListPage extends StatefulWidget {
   const DebtsListPage({Key? key}) : super(key: key);
@@ -11,62 +14,248 @@ class DebtsListPage extends StatefulWidget {
 
 class _DebtsListPageState extends State<DebtsListPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  late final CustomerService _customerService;
+  List<Customer> _customers = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String? _errorMessage;
+  int _currentPage = 0;
+  bool _hasMore = true;
+  final int _pageSize = 20;
+  String _searchQuery = '';
+  OrderBy _currentOrderBy = OrderBy.none;
 
-  // Fake data
-  final List<Map<String, dynamic>> debtors = [
-    {
-      'name': 'محمد أحمد',
-      'phone': '0501234567',
-      'amount': 5000.00,
-      'dueDate': '2025-11-15',
-    },
-    {
-      'name': 'فاطمة علي',
-      'phone': '0559876543',
-      'amount': 2500.50,
-      'dueDate': '2025-11-20',
-    },
-    {
-      'name': 'عبدالله خالد',
-      'phone': '0507654321',
-      'amount': 10000.00,
-      'dueDate': '2025-10-30',
-    },
-    {
-      'name': 'سارة محمود',
-      'phone': '0551239876',
-      'amount': 3750.25,
-      'dueDate': '2025-11-10',
-    },
-    {
-      'name': 'يوسف إبراهيم',
-      'phone': '0503456789',
-      'amount': 7500.00,
-      'dueDate': '2025-11-25',
-    },
-    {
-      'name': 'نورة سعيد',
-      'phone': '0558765432',
-      'amount': 1500.75,
-      'dueDate': '2025-11-05',
-    },
-    {
-      'name': 'خالد عمر',
-      'phone': '0509871234',
-      'amount': 6200.00,
-      'dueDate': '2025-11-18',
-    },
-    {
-      'name': 'ليلى حسن',
-      'phone': '0556543210',
-      'amount': 4300.50,
-      'dueDate': '2025-11-12',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _customerService = GetIt.I<CustomerService>();
+    _scrollController.addListener(_onScroll);
+    _fetchCustomers();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMore) {
+        _loadMoreCustomers();
+      }
+    }
+  }
+
+  Future<void> _fetchCustomers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _currentPage = 0;
+      _customers = [];
+    });
+
+    final result = await _customerService.fetchCustomers(
+      _currentPage,
+      _pageSize,
+      _searchQuery.isEmpty ? null : _searchQuery,
+      _currentOrderBy,
+    );
+
+    result.match(
+      (error) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'فشل في تحميل قائمة العملاء';
+        });
+      },
+      (paginatedResponse) {
+        setState(() {
+          _customers = paginatedResponse.data;
+          _hasMore = paginatedResponse.hasNext;
+          _isLoading = false;
+        });
+      },
+    );
+  }
+
+  Future<void> _loadMoreCustomers() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    final nextPage = _currentPage + 1;
+    final result = await _customerService.fetchCustomers(
+      nextPage,
+      _pageSize,
+      _searchQuery.isEmpty ? null : _searchQuery,
+      _currentOrderBy,
+    );
+
+    result.match(
+      (error) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      },
+      (paginatedResponse) {
+        setState(() {
+          _customers.addAll(paginatedResponse.data);
+          _currentPage = nextPage;
+          _hasMore = paginatedResponse.hasNext;
+          _isLoadingMore = false;
+        });
+      },
+    );
+  }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Title
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            color: Color(0xFF003366),
+                            size: 24,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'ترتيب حسب',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF003366),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Filter Options
+                    _buildFilterOption(
+                      'الأحدث',
+                      OrderBy.none,
+                      Icons.new_releases_outlined,
+                    ),
+                    _buildFilterOption(
+                      'تاريخ الاستحقاق (الأقرب أولاً)',
+                      OrderBy.dueDateAsc,
+                      Icons.calendar_today,
+                    ),
+                    _buildFilterOption(
+                      'تاريخ الاستحقاق (الأبعد أولاً)',
+                      OrderBy.dueDateDesc,
+                      Icons.calendar_today_outlined,
+                    ),
+                    _buildFilterOption(
+                      'المبلغ (من الأقل إلى الأكثر)',
+                      OrderBy.amountAsc,
+                      Icons.arrow_upward,
+                    ),
+                    _buildFilterOption(
+                      'المبلغ (من الأكثر إلى الأقل)',
+                      OrderBy.amountDesc,
+                      Icons.arrow_downward,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterOption(String label, OrderBy orderBy, IconData icon) {
+    final isSelected = _currentOrderBy == orderBy;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _currentOrderBy = orderBy;
+        });
+        _fetchCustomers();
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF003366).withOpacity(0.1) : null,
+          border: Border(
+            right: BorderSide(
+              color: isSelected ? const Color(0xFF003366) : Colors.transparent,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF003366) : Colors.grey[600],
+              size: 24,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? const Color(0xFF003366)
+                      : Colors.grey[800],
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF003366),
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -95,64 +284,149 @@ class _DebtsListPageState extends State<DebtsListPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Search Bar
-                    TextField(
-                      controller: _searchController,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: 'ابحث بالاسم أو رقم الهاتف...',
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF003366),
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(
-                                  Icons.clear,
-                                  color: Colors.grey,
+                    // Search Bar with Filter Button
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(fontSize: 16),
+                            decoration: InputDecoration(
+                              hintText: 'ابحث بالاسم أو رقم الهاتف...',
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_searchController.text.isNotEmpty)
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        color: Colors.grey,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _searchQuery = '';
+                                        _fetchCustomers();
+                                        setState(() {});
+                                      },
+                                    ),
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF003366),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: IconButton(
+                                      onPressed: () {
+                                        _searchQuery = _searchController.text;
+                                        _fetchCustomers();
+                                      },
+                                      icon: const Icon(
+                                        Icons.search,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  width: 1,
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _searchController.clear();
-                                  });
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Colors.grey.withOpacity(0.2),
-                            width: 1,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF003366),
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            onSubmitted: (value) {
+                              _searchQuery = value;
+                              _fetchCustomers();
+                            },
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF003366),
-                            width: 2,
+                        const SizedBox(width: 12),
+                        // Filter Button
+                        Container(
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.grey.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.filter_list,
+                              color: _currentOrderBy != OrderBy.none
+                                  ? const Color(0xFF003366)
+                                  : Colors.grey[600],
+                              size: 24,
+                            ),
+                            onPressed: _showFilterBottomSheet,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {});
-                      },
+                      ],
                     ),
                   ],
                 ),
               ),
               // List of Debtors
               Expanded(
-                child: debtors.isEmpty
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 80,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _fetchCustomers,
+                              child: const Text('إعادة المحاولة'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _customers.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -174,14 +448,21 @@ class _DebtsListPageState extends State<DebtsListPage> {
                         ),
                       )
                     : ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 8,
                         ),
-                        itemCount: debtors.length,
+                        itemCount: _customers.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
-                          final debtor = debtors[index];
-                          return _buildDebtorCard(debtor);
+                          if (index == _customers.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          final customer = _customers[index];
+                          return _buildDebtorCard(customer);
                         },
                       ),
               ),
@@ -189,11 +470,13 @@ class _DebtsListPageState extends State<DebtsListPage> {
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CreateDebtPage()),
             );
+            // Refresh the list after returning from create page
+            _fetchCustomers();
           },
           backgroundColor: const Color(0xFF003366),
           child: const Icon(Icons.add, color: Colors.white),
@@ -202,10 +485,10 @@ class _DebtsListPageState extends State<DebtsListPage> {
     );
   }
 
-  Widget _buildDebtorCard(Map<String, dynamic> debtor) {
-    final bool isOverdue = DateTime.parse(
-      debtor['dueDate'],
-    ).isBefore(DateTime.now());
+  Widget _buildDebtorCard(Customer customer) {
+    final bool isOverdue =
+        customer.paymentDue != null &&
+        customer.paymentDue!.isBefore(DateTime.now());
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -232,7 +515,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UpdateDebtPage(debtId: '12345'),
+              builder: (context) => UpdateDebtPage(debtId: customer.id),
             ),
           );
         },
@@ -261,7 +544,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        debtor['name'],
+                        customer.name,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -269,19 +552,24 @@ class _DebtsListPageState extends State<DebtsListPage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text(
-                            debtor['phone'],
-                            style: TextStyle(
-                              fontSize: 14,
+                      if (customer.phoneNumber != null)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone,
+                              size: 14,
                               color: Colors.grey[600],
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 6),
+                            Text(
+                              customer.phoneNumber!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -302,7 +590,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${debtor['amount'].toStringAsFixed(2)} ر.س',
+                      '${customer.totalDebt.toStringAsFixed(0)} د.ع',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -312,49 +600,50 @@ class _DebtsListPageState extends State<DebtsListPage> {
                   ],
                 ),
                 // Due Date with Badge
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 14,
-                          color: isOverdue ? Colors.red : Colors.grey[600],
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          debtor['dueDate'],
-                          style: TextStyle(
-                            fontSize: 13,
+                if (customer.paymentDue != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
                             color: isOverdue ? Colors.red : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            customer.paymentDue!.toString().split(' ')[0],
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isOverdue ? Colors.red : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (isOverdue) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'متأخر',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                    if (isOverdue) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'متأخر',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
                     ],
-                  ],
-                ),
+                  ),
               ],
             ),
           ],

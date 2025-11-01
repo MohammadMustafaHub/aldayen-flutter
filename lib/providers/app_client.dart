@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+// final _appUrl = 'https://aldayen.sliplane.app/';
+final _appUrl = 'http://localhost:5121/';
+
 Dio CreateAppClient() {
   final client = Dio(
     BaseOptions(
-      baseUrl: 'http://localhost:5121/', // Replace with your API base URL
+      baseUrl: _appUrl, // Replace with your API base URL
       connectTimeout: Duration(milliseconds: 10000),
       receiveTimeout: Duration(milliseconds: 10000),
       headers: {
@@ -115,7 +118,7 @@ class AuthInterceptor extends QueuedInterceptor {
     try {
       Dio client = Dio(
         BaseOptions(
-          baseUrl: 'http://localhost:5121/',
+          baseUrl: _appUrl,
           headers: {'Content-Type': 'application/json'},
         ),
       );

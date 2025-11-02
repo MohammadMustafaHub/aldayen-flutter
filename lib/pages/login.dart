@@ -3,6 +3,7 @@ import 'package:aldayen/pages/otp.dart';
 import 'package:aldayen/pages/password/change_password_page.dart';
 import 'package:aldayen/services/auth-service.dart';
 import 'package:aldayen/state-management/user-state.dart';
+import 'package:aldayen/utils/transform_phone_number.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -47,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       final result = await _authService.login(
-        _phoneController.text,
+        TransformPhoneNumber(_phoneController.text)!,
         _passwordController.text,
       );
 
@@ -196,8 +197,8 @@ class _LoginPageState extends State<LoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال رقم الهاتف';
                         }
-                        if (value.length < 10) {
-                          return 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل';
+                        if (TransformPhoneNumber(value) == null) {
+                          return "رقم الهاتف غير صالح";
                         }
                         return null;
                       },

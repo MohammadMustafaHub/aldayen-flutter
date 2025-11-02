@@ -1,6 +1,10 @@
 import 'package:aldayen/pages/otp.dart';
 import 'package:aldayen/services/auth-service.dart';
+import 'package:aldayen/state-management/user-state.dart';
+import 'package:aldayen/utils/is_valid_password.dart';
+import 'package:aldayen/utils/transform_phone_number.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'login.dart';
 
@@ -52,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     final result = await _authService.register(
-      _phoneController.text,
+      TransformPhoneNumber(_phoneController.text)!,
       _passwordController.text,
       _nameController.text,
     );
@@ -66,7 +70,8 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       },
       (user) {
-        // TODO: add user to state
+        context.read<UserCubit>().setUser(user);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const OtpPage()),
@@ -95,6 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    SizedBox(height: 32),
                     // Logo or Icon
                     Container(
                       height: 100,
@@ -218,8 +224,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال رقم الهاتف';
                         }
-                        if (value.length < 10) {
-                          return 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل';
+                        if (TransformPhoneNumber(_phoneController.text) ==
+                            null) {
+                          return 'رقم الهاتف غير صالح';
                         }
                         return null;
                       },
@@ -282,8 +289,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال كلمة المرور';
                         }
-                        if (value.length < 6) {
-                          return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                        if (IsValidPassword(value) != null) {
+                          return IsValidPassword(value);
                         }
                         return null;
                       },
@@ -424,4 +431,6 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
+
+  
 }

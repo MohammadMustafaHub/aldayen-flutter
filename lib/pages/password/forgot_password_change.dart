@@ -1,4 +1,5 @@
 import 'package:aldayen/services/password_service.dart';
+import 'package:aldayen/utils/is_valid_password.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -243,8 +244,8 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال كلمة المرور الجديدة';
                         }
-                        if (value.length < 6) {
-                          return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                        if (IsValidPassword(value) != null) {
+                          return IsValidPassword(value);
                         }
                         return null;
                       },

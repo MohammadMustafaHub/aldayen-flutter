@@ -1,5 +1,6 @@
 import 'package:aldayen/pages/password/change_password_otp.dart';
 import 'package:aldayen/services/password_service.dart';
+import 'package:aldayen/utils/transform_phone_number.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -40,7 +41,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       try {
         final result = await _passwordService.requestChangePasswordOtp(
-          _phoneController.text,
+          TransformPhoneNumber(_phoneController.text)!,
         );
 
         if (!mounted) return;
@@ -64,7 +65,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  ChangePasswordOtpPage(phoneNumber: _phoneController.text),
+                  ChangePasswordOtpPage(phoneNumber: TransformPhoneNumber(_phoneController.text)!),
             ),
           );
         } else {
@@ -194,8 +195,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال رقم الهاتف';
                         }
-                        if (value.length < 10) {
-                          return 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل';
+                        if (TransformPhoneNumber(value) == null) {
+                          return "رقم الهاتف غير صالح";
                         }
                         return null;
                       },

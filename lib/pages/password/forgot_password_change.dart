@@ -26,7 +26,8 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   bool _displayError = false;
-  String _errorMessage = 'حدث خطأ أثناء تغيير كلمة المرور. الرجاء المحاولة مرة أخرى.';
+  String _errorMessage =
+      'حدث خطأ أثناء تغيير كلمة المرور. الرجاء المحاولة مرة أخرى.';
   late PasswordService _passwordService;
 
   @override
@@ -117,7 +118,8 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
         setState(() {
           _isLoading = false;
           _displayError = true;
-          _errorMessage = 'حدث خطأ أثناء تغيير كلمة المرور. الرجاء المحاولة مرة أخرى.';
+          _errorMessage =
+              'حدث خطأ أثناء تغيير كلمة المرور. الرجاء المحاولة مرة أخرى.';
         });
       }
     }
@@ -132,10 +134,7 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
         appBar: AppBar(
           title: const Text(
             'تعيين كلمة مرور جديدة',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: const Color(0xFF003366),
           elevation: 0,
@@ -322,8 +321,11 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
-                                color: Colors.red[700], size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red[700],
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -385,8 +387,11 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline,
-                              color: Colors.blue[700], size: 20),
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.blue[700],
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(

@@ -1,26 +1,32 @@
+import 'dart:async';
 import 'package:aldayen/pages/password/forgot_password_change.dart';
 import 'package:aldayen/services/password_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 
 class ChangePasswordOtpPage extends StatefulWidget {
   final String phoneNumber;
 
-  const ChangePasswordOtpPage({
-    Key? key,
-    required this.phoneNumber,
-  }) : super(key: key);
+  const ChangePasswordOtpPage({Key? key, required this.phoneNumber})
+    : super(key: key);
 
   @override
   State<ChangePasswordOtpPage> createState() => _ChangePasswordOtpPageState();
 }
 
 class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _otpController = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
+
   bool _isLoading = false;
-  bool _displayError = false;
-  String _errorMessage = 'رمز التحقق غير صحيح. الرجاء المحاولة مرة أخرى.';
+  bool _canResend = true;
+  int _resendTimer = 0;
+  Timer? _timer;
+  String? _errorMessage;
   late PasswordService _passwordService;
 
   @override
@@ -31,63 +37,103 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
 
   @override
   void dispose() {
-    _otpController.dispose();
+    _timer?.cancel();
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _handleVerifyOtp() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _displayError = false;
-      });
+  void _startResendTimer() {
+    setState(() {
+      _canResend = false;
+      _resendTimer = 60;
+    });
 
-      try {
-        final token = await _passwordService.RequestChangePasswordToken(
-          _otpController.text,
-        );
-
-        if (!mounted) return;
-
-        if (token != null && token.isNotEmpty) {
-          // Token received successfully
-          setState(() {
-            _isLoading = false;
-          });
-
-          // Navigate to password change page with token
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ForgotPasswordChangePage(
-                token: token,
-                phoneNumber: widget.phoneNumber,
-              ),
-            ),
-          );
-        } else {
-          // Failed to verify OTP
-          setState(() {
-            _isLoading = false;
-            _displayError = true;
-            _errorMessage = 'رمز التحقق غير صحيح. الرجاء المحاولة مرة أخرى.';
-          });
-        }
-      } catch (error) {
-        if (!mounted) return;
-
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendTimer > 0) {
         setState(() {
-          _isLoading = false;
-          _displayError = true;
-          _errorMessage = 'حدث خطأ أثناء التحقق من الرمز. الرجاء المحاولة مرة أخرى.';
+          _resendTimer--;
+        });
+      } else {
+        timer.cancel();
+        setState(() {
+          _canResend = true;
         });
       }
+    });
+  }
+
+  Future<void> _handleVerifyOtp() async {
+    // Get OTP code
+    String otpCode = _otpControllers.map((c) => c.text).join();
+
+    if (otpCode.length < 6 && mounted) {
+      setState(() {
+        _errorMessage = 'الرجاء إدخال رمز التحقق كاملاً';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final token = await _passwordService.RequestChangePasswordToken(otpCode);
+
+      if (!mounted) return;
+
+      if (token != null && token.isNotEmpty) {
+        // Token received successfully
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Navigate to password change page with token
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForgotPasswordChangePage(
+              token: token,
+              phoneNumber: widget.phoneNumber,
+            ),
+          ),
+        );
+      } else {
+        // Failed to verify OTP
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'رمز التحقق غير صحيح. الرجاء المحاولة مرة أخرى.';
+        });
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            'حدث خطأ أثناء التحقق من الرمز. الرجاء المحاولة مرة أخرى.';
+      });
     }
   }
 
   Future<void> _handleResendOtp() async {
+    if (!_canResend) return;
+
+    // Clear all OTP fields
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
+    _focusNodes[0].requestFocus();
+
     setState(() {
-      _displayError = false;
+      _errorMessage = null;
     });
 
     try {
@@ -99,11 +145,12 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
 
       if (result) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إعادة إرسال رمز التحقق'),
+          SnackBar(
+            content: Text('تم إرسال رمز التحقق إلى ${widget.phoneNumber}'),
             backgroundColor: Colors.green,
           ),
         );
+        _startResendTimer();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -133,10 +180,7 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
         appBar: AppBar(
           title: const Text(
             'التحقق من رمز OTP',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: const Color(0xFF003366),
           elevation: 0,
@@ -144,229 +188,263 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
           iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 24),
-                    // Icon
-                    Container(
-                      height: 100,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF003366),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF003366).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.message,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 10),
 
-                    // Title
-                    const Text(
-                      'أدخل رمز التحقق',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF003366),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'تم إرسال رمز التحقق إلى\n${widget.phoneNumber}',
-                      style: TextStyle(fontSize: 15, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
+                // Icon
+                Container(
+                  height: 80,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF003366).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.message_outlined,
+                    size: 40,
+                    color: Color(0xFF003366),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-                    // OTP Field
-                    TextFormField(
-                      controller: _otpController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        letterSpacing: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLength: 6,
-                      decoration: InputDecoration(
-                        labelText: 'رمز التحقق',
-                        hintText: '000000',
-                        prefixIcon: const Icon(
-                          Icons.pin,
-                          color: Color(0xFF003366),
-                        ),
-                        counterText: '',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF003366),
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'الرجاء إدخال رمز التحقق';
-                        }
-                        if (value.length != 6) {
-                          return 'رمز التحقق يجب أن يكون 6 أرقام';
-                        }
-                        return null;
-                      },
-                    ),
+                // Title
+                const Text(
+                  'تحقق من رمز OTP',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003366),
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-                    // Error Message
-                    if (_displayError) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline,
-                                color: Colors.red[700], size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _errorMessage,
-                                style: TextStyle(
-                                  color: Colors.red[700],
-                                  fontSize: 14,
+                // Message
+                Text(
+                  'تم إرسال رمز التحقق إلى',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.phoneNumber,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003366),
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // OTP Input Fields
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (index) {
+                      return Flexible(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 50),
+                          height: 60,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          child: TextFormField(
+                            controller: _otpControllers[index],
+                            focusNode: _focusNodes[index],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            maxLength: 1,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF003366),
+                            ),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF003366),
+                                  width: 2,
                                 ),
                               ),
                             ),
-                          ],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                // Move to next field
+                                if (index < 5) {
+                                  _focusNodes[index + 1].requestFocus();
+                                } else {
+                                  // Last field, remove focus
+                                  _focusNodes[index].unfocus();
+                                }
+                              } else {
+                                // Move to previous field on delete
+                                if (index > 0) {
+                                  _focusNodes[index - 1].requestFocus();
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // Verify Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleVerifyOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF003366),
+                      disabledBackgroundColor: const Color(0xFF003366),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 3,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'تحقق',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+                Container(
+                  height: 24,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _errorMessage != null
+                      ? Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 24),
+
+                // Resend Code Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'لم تستلم الرمز؟',
+                      style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(width: 8),
+                    if (_canResend)
+                      TextButton(
+                        onPressed: _handleResendOtp,
+                        child: const Text(
+                          'إعادة الإرسال',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF003366),
+                          ),
+                        ),
+                      )
+                    else
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 18,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_resendTimer.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF003366),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'ثانية',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Info Message
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.blue.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'تحقق من رسائلك النصية للحصول على رمز التحقق المكون من 6 أرقام',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ),
                     ],
-                    const SizedBox(height: 32),
-
-                    // Verify Button
-                    SizedBox(
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleVerifyOtp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003366),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: 5,
-                          shadowColor: const Color(0xFF003366).withOpacity(0.4),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Text(
-                                'تحقق',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Resend OTP
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'لم تستلم الرمز؟',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 15,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: _handleResendOtp,
-                          child: const Text(
-                            'إعادة الإرسال',
-                            style: TextStyle(
-                              color: Color(0xFF003366),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Info Box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue[200]!),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.info_outline,
-                              color: Colors.blue[700], size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'قد يستغرق وصول الرسالة بضع دقائق. تأكد من إدخال الرمز المكون من 6 أرقام.',
-                              style: TextStyle(
-                                color: Colors.blue[700],
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

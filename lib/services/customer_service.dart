@@ -113,4 +113,16 @@ class CustomerService {
       return Left(ApiErrorResponse.fromJson(response.data));
     }
   }
+
+  Future<Either<ApiErrorResponse, List<Customer>>> getSoonPayment() async {
+    final response = await _dio.get('api/customers/get-soon-payment');
+
+    if (response.statusCode == 200) {
+      final data = response.data as List;
+      final customers = data.map((e) => Customer.fromJson(e)).toList();
+      return Right(customers);
+    } else {
+      return Left(ApiErrorResponse.fromJson(response.data));
+    }
+  }
 }

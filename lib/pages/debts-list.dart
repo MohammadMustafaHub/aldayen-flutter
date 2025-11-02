@@ -212,7 +212,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF003366).withOpacity(0.1) : null,
+          color: isSelected ? const Color(0xFF003366).withValues(alpha: 0.1) : null,
           border: Border(
             right: BorderSide(
               color: isSelected ? const Color(0xFF003366) : Colors.transparent,
@@ -286,109 +286,115 @@ class _DebtsListPageState extends State<DebtsListPage> {
                     const SizedBox(height: 16),
                     // Search Bar with Filter Button
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // Search Field
                         Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            style: const TextStyle(fontSize: 16),
-                            decoration: InputDecoration(
-                              hintText: 'ابحث بالاسم أو رقم الهاتف...',
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_searchController.text.isNotEmpty)
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.clear,
-                                        color: Colors.grey,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _searchQuery = '';
-                                        _fetchCustomers();
-                                        setState(() {});
-                                      },
-                                    ),
-                                  Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF003366),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: IconButton(
-                                      onPressed: () {
-                                        _searchQuery = _searchController.text;
-                                        _fetchCustomers();
-                                      },
-                                      icon: const Icon(
-                                        Icons.search,
-                                        color: Colors.white,
-                                        size: 22,
-                                      ),
-                                      padding: const EdgeInsets.all(8),
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.withOpacity(0.2),
-                                  width: 1,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF003366),
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
+                              ],
                             ),
-                            onSubmitted: (value) {
-                              _searchQuery = value;
-                              _fetchCustomers();
-                            },
-                            onChanged: (value) {
-                              setState(() {});
-                            },
+                            child: TextField(
+                              controller: _searchController,
+                              style: const TextStyle(fontSize: 16),
+                              decoration: InputDecoration(
+                                hintText: 'ابحث بالاسم أو رقم الهاتف...',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 15,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF003366),
+                                ),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (_searchController.text.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          _searchQuery = '';
+                                          _fetchCustomers();
+                                          setState(() {});
+                                        },
+                                      ),
+                                  ],
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF003366),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 14,
+                                ),
+                              ),
+                              onSubmitted: (value) {
+                                _searchQuery = value;
+                                _fetchCustomers();
+                              },
+                              onChanged: (value) {
+                                setState(() {});
+                              },
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+
+                        const SizedBox(width: 10),
+
                         // Filter Button
                         Container(
-                          height: 56,
+                          height: 46,
+                          width: 46,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            color: _currentOrderBy != OrderBy.none
+                                ? const Color(0xFF003366)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: Colors.grey.withOpacity(0.2),
-                              width: 1,
+                              color: Colors.grey.withValues(alpha: 0.2),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: IconButton(
                             icon: Icon(
-                              Icons.filter_list,
+                              Icons.filter_list_rounded,
                               color: _currentOrderBy != OrderBy.none
-                                  ? const Color(0xFF003366)
-                                  : Colors.grey[600],
+                                  ? Colors.white
+                                  : Colors.grey[700],
                               size: 24,
                             ),
                             onPressed: _showFilterBottomSheet,
+                            tooltip: 'تصفية النتائج',
                           ),
                         ),
                       ],
@@ -498,13 +504,13 @@ class _DebtsListPageState extends State<DebtsListPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isOverdue
-              ? Colors.red.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.2),
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -529,7 +535,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF003366).withOpacity(0.1),
+                    color: const Color(0xFF003366).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -629,7 +635,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(

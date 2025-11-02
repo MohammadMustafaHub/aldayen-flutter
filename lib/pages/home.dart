@@ -15,15 +15,22 @@ class _HomePageState extends State<HomePage> {
   String userName = 'اسم المستخدم';
   String userPhone = '05xxxxxxxx';
 
-  final List<Widget> _pages = [
-    const DetailsPage(),
-    const DebtsListPage(),
-    const SettingsPage(),
-  ];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _pages = [
+      DetailsPage(
+        onNavigateToDebts: () {
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+      ),
+      const DebtsListPage(),
+      const SettingsPage(),
+    ];
   }
 
   @override

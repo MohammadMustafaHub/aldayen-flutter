@@ -3,11 +3,13 @@ class Transaction {
   final double amount;
   final DateTime createdAt;
   final TransactionType type;
+  final String? customerName;
   Transaction({
     required this.id,
     required this.amount,
     required this.createdAt,
     required this.type,
+    this.customerName,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -18,6 +20,7 @@ class Transaction {
       type: json['transactionType'] == 'Payment'
           ? TransactionType.payment
           : TransactionType.debit,
+      customerName: json['customer']?['customerName'] as String?,
     );
   }
 
@@ -31,7 +34,4 @@ class Transaction {
   }
 }
 
-enum TransactionType {
-  payment,
-  debit,
-}
+enum TransactionType { payment, debit }

@@ -2,6 +2,7 @@ import 'package:aldayen/models/transaction.dart';
 import 'package:aldayen/models/customer.dart';
 import 'package:aldayen/components/transaction_card.dart';
 import 'package:aldayen/services/customer_service.dart';
+import 'package:aldayen/pages/transactions/create_transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
@@ -19,7 +20,6 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _transactionAmountController = TextEditingController();
   final _notesController = TextEditingController();
 
   late TabController _tabController;
@@ -30,7 +30,6 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
   double _remaining = 0;
   bool _isLoading = false;
   bool _isLoadingData = true;
-  String _transactionType = 'deposit'; // 'deposit' or 'add_debt'
   String? _errorMessage;
   DateTime? _selectedDate;
 
@@ -46,7 +45,6 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
     _tabController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
-    _transactionAmountController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -155,364 +153,25 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
     }
   }
 
-  void _showAddTransactionDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header with Icon
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF003366).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.add_circle_outline,
-                              color: Color(0xFF003366),
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Text(
-                              'إضافة معاملة جديدة',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF003366),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+  Future<void> _navigateToCreateTransaction() async {
+    if (_customerData == null) return;
 
-                      // Transaction Type Label
-                      Text(
-                        'نوع المعاملة',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Transaction Type Selector (Custom Cards)
-                      Row(
-                        children: [
-                          // Deposit Card
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                setDialogState(() {
-                                  _transactionType = 'deposit';
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: _transactionType == 'deposit'
-                                      ? Colors.green.withOpacity(0.1)
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _transactionType == 'deposit'
-                                        ? Colors.green
-                                        : Colors.grey[300]!,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_downward,
-                                      color: _transactionType == 'deposit'
-                                          ? Colors.green
-                                          : Colors.grey[600],
-                                      size: 32,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'إيداع',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: _transactionType == 'deposit'
-                                            ? Colors.green
-                                            : Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Add Debt Card
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                setDialogState(() {
-                                  _transactionType = 'add_debt';
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: _transactionType == 'add_debt'
-                                      ? Colors.red.withOpacity(0.1)
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _transactionType == 'add_debt'
-                                        ? Colors.red
-                                        : Colors.grey[300]!,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: _transactionType == 'add_debt'
-                                          ? Colors.red
-                                          : Colors.grey[600],
-                                      size: 32,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'دين جديد',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: _transactionType == 'add_debt'
-                                            ? Colors.red
-                                            : Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Amount Label
-                      Text(
-                        'المبلغ',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Amount Field
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                        child: TextFormField(
-                          controller: _transactionAmountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF003366),
-                          ),
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            hintText: '0.00',
-                            hintStyle: TextStyle(
-                              fontSize: 24,
-                              color: Colors.grey[400],
-                            ),
-                            suffixIcon: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                'د.ع',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.all(20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  _transactionAmountController.clear();
-                                  Navigator.pop(context);
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.grey[700],
-                                  side: BorderSide(color: Colors.grey[300]!),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'إلغاء',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: SizedBox(
-                              height: 50,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (_transactionAmountController
-                                      .text
-                                      .isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('الرجاء إدخال المبلغ'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  final amount = double.tryParse(
-                                    _transactionAmountController.text,
-                                  );
-                                  if (amount == null || amount <= 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('الرجاء إدخال مبلغ صحيح'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  Navigator.pop(context);
-
-                                  // Simulate adding transaction
-                                  setState(() {
-                                    if (_transactionType == 'deposit') {
-                                      _remaining -= amount;
-                                    } else {
-                                      _remaining += amount;
-                                    }
-
-                                    // Add to transactions list
-                                    _transactions.insert(
-                                      0,
-                                      Transaction(
-                                        id: DateTime.now()
-                                            .millisecondsSinceEpoch
-                                            .toString(),
-                                        type: _transactionType == 'deposit'
-                                            ? TransactionType.payment
-                                            : TransactionType.debit,
-                                        amount: amount,
-                                        createdAt: DateTime.now(),
-                                      ),
-                                    );
-                                  });
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        _transactionType == 'deposit'
-                                            ? 'تم إضافة الإيداع بنجاح'
-                                            : 'تم إضافة الدين بنجاح',
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-
-                                  _transactionAmountController.clear();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _transactionType == 'deposit'
-                                      ? Colors.green
-                                      : Colors.red,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.check_circle),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _transactionType == 'deposit'
-                                          ? 'إضافة إيداع'
-                                          : 'إضافة دين',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            CreateTransactionPage(customer: _customerData!.customer),
+      ),
     );
+
+    // If transaction was created successfully, reload data
+    if (result != null && result is CustomerWithTransactions) {
+      setState(() {
+        _customerData = result;
+        _transactions = result.transactions;
+        _remaining = result.customer.totalDebt;
+      });
+    }
   }
 
   void _handleDeleteDebt() {
@@ -570,15 +229,10 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
             ),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_forward, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
-              onPressed: _handleDeleteDebt,
-            ),
-          ],
+
           bottom: TabBar(
             controller: _tabController,
             indicatorColor: Colors.white,
@@ -645,34 +299,11 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Icon
-              Center(
-                child: Container(
-                  height: 80,
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF003366).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 40,
-                    color: Color(0xFF003366),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'ID: ${widget.debtId}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ),
               const SizedBox(height: 24),
 
               // Debt Summary Card
               _buildSummaryCard(
-                'المتبقي',
+                "الدين المتبقي",
                 _remaining,
                 const Color(0xFF003366),
                 isLarge: true,
@@ -871,7 +502,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
               SizedBox(
                 height: 56,
                 child: OutlinedButton.icon(
-                  onPressed: _showAddTransactionDialog,
+                  onPressed: _navigateToCreateTransaction,
                   icon: const Icon(Icons.add_circle_outline),
                   label: const Text('إضافة معاملة'),
                   style: OutlinedButton.styleFrom(

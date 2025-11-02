@@ -1,62 +1,74 @@
+import 'package:aldayen/models/customer.dart';
+import 'package:aldayen/models/transaction.dart';
+import 'package:aldayen/pages/debts-management/create-debt.dart';
+import 'package:aldayen/pages/transactions/transactions_page.dart';
+import 'package:aldayen/services/customer_service.dart';
+import 'package:aldayen/services/transaction_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class DetailsPage extends StatefulWidget {
-  const DetailsPage({Key? key}) : super(key: key);
+  final VoidCallback? onNavigateToDebts;
+
+  const DetailsPage({Key? key, this.onNavigateToDebts}) : super(key: key);
 
   @override
   State<DetailsPage> createState() => _DetailsPageState();
 }
 
 class _DetailsPageState extends State<DetailsPage> {
-  // Fake recent transactions data
-  final List<Map<String, dynamic>> recentTransactions = [
-    {
-      'debtorName': 'محمد أحمد',
-      'type': 'deposit', // deposit or debt
-      'amount': 1000.00,
-      'date': '2025-10-26',
-    },
-    {
-      'debtorName': 'فاطمة علي',
-      'type': 'debt',
-      'amount': 2500.00,
-      'date': '2025-10-25',
-    },
-    {
-      'debtorName': 'عبدالله خالد',
-      'type': 'deposit',
-      'amount': 500.00,
-      'date': '2025-10-24',
-    },
-    {
-      'debtorName': 'سارة محمود',
-      'type': 'debt',
-      'amount': 3750.00,
-      'date': '2025-10-23',
-    },
-  ];
+  late CustomerService _customerService;
+  late TransactionService _transactionService;
+  bool isLoadingCustomers = true;
+  bool isLoadingTransactions = true;
+  String customersErrorMessage = '';
+  String transactionsErrorMessage = '';
 
-  // Fake upcoming debts data
-  final List<Map<String, dynamic>> upcomingDebts = [
-    {
-      'name': 'عبدالله خالد',
-      'amount': 10000.00,
-      'dueDate': '2025-10-30',
-      'daysLeft': 3,
-    },
-    {
-      'name': 'نورة سعيد',
-      'amount': 1500.75,
-      'dueDate': '2025-11-05',
-      'daysLeft': 9,
-    },
-    {
-      'name': 'سارة محمود',
-      'amount': 3750.25,
-      'dueDate': '2025-11-10',
-      'daysLeft': 14,
-    },
-  ];
+  List<Customer> upcomingDebts = [];
+  List<Transaction> recentTransactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _customerService = GetIt.I<CustomerService>();
+    _transactionService = GetIt.I<TransactionService>();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    // Fetch data using the services
+    final customersRes = await _customerService.getSoonPayment();
+    final transactionsRes = await _transactionService.getTransactions(0, 5);
+    customersRes.match(
+      (failure) {
+        setState(() {
+          customersErrorMessage = 'فشل في تحميل البيانات';
+          isLoadingCustomers = false;
+        });
+      },
+      (customers) {
+        setState(() {
+          upcomingDebts = customers;
+          isLoadingCustomers = false;
+        });
+      },
+    );
+
+    transactionsRes.match(
+      (failure) {
+        setState(() {
+          transactionsErrorMessage = 'فشل في تحميل البيانات';
+          isLoadingTransactions = false;
+        });
+      },
+      (transactions) {
+        setState(() {
+          recentTransactions = transactions.data;
+          isLoadingTransactions = false;
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +92,7 @@ class _DetailsPageState extends State<DetailsPage> {
                       const Text(
                         'إجراءات سريعة',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF003366),
                         ),
@@ -94,7 +106,13 @@ class _DetailsPageState extends State<DetailsPage> {
                               title: 'إضافة مدين',
                               color: const Color(0xFF003366),
                               onTap: () {
-                                // Navigate to add debtor
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CreateDebtPage(),
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -105,7 +123,12 @@ class _DetailsPageState extends State<DetailsPage> {
                               title: 'المعاملات',
                               color: Colors.green,
                               onTap: () {
-                                // Navigate to transactions
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionsPage(),
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -120,7 +143,7 @@ class _DetailsPageState extends State<DetailsPage> {
                               title: 'قائمة المدينين',
                               color: Colors.orange,
                               onTap: () {
-                                // Navigate to debtors list
+                                widget.onNavigateToDebts?.call();
                               },
                             ),
                           ),
@@ -157,28 +180,31 @@ class _DetailsPageState extends State<DetailsPage> {
                           color: Color(0xFF003366),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // View all transactions
-                        },
-                        child: const Text('عرض الكل'),
-                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 140,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: recentTransactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = recentTransactions[index];
-                      return _buildTransactionCard(transaction);
-                    },
-                  ),
-                ),
+                transactionsErrorMessage.isNotEmpty
+                    ? SizedBox(
+                        height: 140,
+                        child: Center(child: Text(transactionsErrorMessage!)),
+                      )
+                    : SizedBox(
+                        height: 140,
+                        child: isLoadingTransactions
+                            ? const Center(child: CircularProgressIndicator())
+                            : ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
+                                itemCount: recentTransactions.length,
+                                itemBuilder: (context, index) {
+                                  final transaction = recentTransactions[index];
+                                  return _buildTransactionCard(transaction);
+                                },
+                              ),
+                      ),
 
                 const SizedBox(height: 32),
 
@@ -196,26 +222,29 @@ class _DetailsPageState extends State<DetailsPage> {
                           color: Color(0xFF003366),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // View all upcoming debts
-                        },
-                        child: const Text('عرض الكل'),
-                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: upcomingDebts.length,
-                  itemBuilder: (context, index) {
-                    final debt = upcomingDebts[index];
-                    return _buildUpcomingDebtCard(debt);
-                  },
-                ),
+                customersErrorMessage.isNotEmpty
+                    ? Center(
+                        child: SizedBox(
+                          height: 140,
+                          child: Center(child: Text(customersErrorMessage!)),
+                        ),
+                      )
+                    : isLoadingCustomers
+                    ? Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: upcomingDebts.length,
+                        itemBuilder: (context, index) {
+                          final debt = upcomingDebts[index];
+                          return _buildUpcomingDebtCard(debt);
+                        },
+                      ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -273,8 +302,8 @@ class _DetailsPageState extends State<DetailsPage> {
     );
   }
 
-  Widget _buildTransactionCard(Map<String, dynamic> transaction) {
-    final isDeposit = transaction['type'] == 'deposit';
+  Widget _buildTransactionCard(Transaction transaction) {
+    final isDeposit = transaction.type == TransactionType.payment;
     return Container(
       width: 200,
       margin: const EdgeInsets.only(left: 12),
@@ -328,7 +357,7 @@ class _DetailsPageState extends State<DetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            transaction['debtorName'],
+            transaction.customerName ?? '',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -339,7 +368,7 @@ class _DetailsPageState extends State<DetailsPage> {
           ),
           const Spacer(),
           Text(
-            '${transaction['amount'].toStringAsFixed(2)} ر.س',
+            '${transaction.amount.toStringAsFixed(0)} د.ع',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -350,7 +379,7 @@ class _DetailsPageState extends State<DetailsPage> {
           ),
           const SizedBox(height: 2),
           Text(
-            transaction['date'],
+            transaction.createdAt.toString(),
             style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -360,8 +389,10 @@ class _DetailsPageState extends State<DetailsPage> {
     );
   }
 
-  Widget _buildUpcomingDebtCard(Map<String, dynamic> debt) {
-    final isUrgent = debt['daysLeft'] <= 7;
+  Widget _buildUpcomingDebtCard(Customer debt) {
+    final isUrgent =
+        debt.paymentDue != null &&
+        debt.paymentDue!.isBefore(DateTime.now().add(const Duration(days: 3)));
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -404,7 +435,7 @@ class _DetailsPageState extends State<DetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  debt['name'],
+                  debt.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -413,7 +444,7 @@ class _DetailsPageState extends State<DetailsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'الاستحقاق: ${debt['dueDate']}',
+                  'الاستحقاق: ${debt.paymentDue!.toLocal().toString().split(' ')[0]}',
                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
               ],
@@ -423,7 +454,7 @@ class _DetailsPageState extends State<DetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${debt['amount'].toStringAsFixed(2)} ر.س',
+                '${debt.totalDebt.toStringAsFixed(0)} د.ع',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -440,7 +471,7 @@ class _DetailsPageState extends State<DetailsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'بعد ${debt['daysLeft']} يوم',
+                  _getDaysDifference(debt.paymentDue!),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -453,5 +484,17 @@ class _DetailsPageState extends State<DetailsPage> {
         ],
       ),
     );
+  }
+
+  String _getDaysDifference(DateTime dueDate) {
+    final now = DateTime.now();
+    final difference = dueDate.difference(now).inDays;
+    if (difference > 0) {
+      return 'بعد $difference يوم';
+    } else if (difference == 0) {
+      return 'اليوم';
+    } else {
+      return 'منذ ${difference.abs()} يوم';
+    }
   }
 }

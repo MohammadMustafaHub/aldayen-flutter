@@ -1,4 +1,5 @@
 import 'package:aldayen/pages/login.dart';
+import 'package:aldayen/pages/password/change_password.dart';
 import 'package:aldayen/services/auth-service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
@@ -61,147 +62,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _handleChangePassword() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        final oldPasswordController = TextEditingController();
-        final newPasswordController = TextEditingController();
-        final confirmPasswordController = TextEditingController();
-        final formKey = GlobalKey<FormState>();
-        bool isLoading = false;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: AlertDialog(
-                title: const Text('تغيير كلمة المرور'),
-                content: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: oldPasswordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'كلمة المرور القديمة',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال كلمة المرور القديمة';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: newPasswordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'كلمة المرور الجديدة',
-                            prefixIcon: const Icon(Icons.lock),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال كلمة المرور الجديدة';
-                            }
-                            if (value.length < 6) {
-                              return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: confirmPasswordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'تأكيد كلمة المرور',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء تأكيد كلمة المرور';
-                            }
-                            if (value != newPasswordController.text) {
-                              return 'كلمة المرور غير متطابقة';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            oldPasswordController.dispose();
-                            newPasswordController.dispose();
-                            confirmPasswordController.dispose();
-                            Navigator.pop(context);
-                          },
-                    child: const Text('إلغاء'),
-                  ),
-                  ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            if (formKey.currentState!.validate()) {
-                              setDialogState(() {
-                                isLoading = true;
-                              });
-
-                              // Simulate API call
-                              Future.delayed(const Duration(seconds: 2), () {
-                                oldPasswordController.dispose();
-                                newPasswordController.dispose();
-                                confirmPasswordController.dispose();
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('تم تغيير كلمة المرور بنجاح'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              });
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF003366),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text('تغيير'),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ChangePasswordPage(),
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:aldayen/providers/app_client.dart';
 import 'package:aldayen/services/auth-service.dart';
 import 'package:aldayen/services/customer_service.dart';
+import 'package:aldayen/services/password_service.dart';
 import 'package:aldayen/services/transaction_service.dart';
 import 'package:aldayen/services/user-service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -14,6 +15,7 @@ SetupDependencies()  {
   GetIt.I.registerLazySingleton(() => UserService());
   GetIt.I.registerLazySingleton(() => CustomerService());
   GetIt.I.registerLazySingleton(() => TransactionService());
+  GetIt.I.registerLazySingleton(() => PasswordService());
 }
 
 

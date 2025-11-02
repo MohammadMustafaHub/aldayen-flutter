@@ -1,5 +1,6 @@
 import 'package:aldayen/pages/home.dart';
 import 'package:aldayen/pages/otp.dart';
+import 'package:aldayen/pages/password/change_password_page.dart';
 import 'package:aldayen/services/auth-service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
@@ -82,12 +83,10 @@ class _LoginPageState extends State<LoginPage> {
 
           context.read<UserCubit>().setUser(user);
 
-          if(mounted && user.isPhoneVerified) {
+          if (mounted && user.isPhoneVerified) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const HomePage(),
-              ),
+              MaterialPageRoute(builder: (context) => const HomePage()),
             );
           }
 
@@ -95,9 +94,7 @@ class _LoginPageState extends State<LoginPage> {
             // Navigate to OTP page
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const OtpPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const OtpPage()),
             );
           }
         },
@@ -282,7 +279,12 @@ class _LoginPageState extends State<LoginPage> {
                       alignment: Alignment.centerLeft,
                       child: TextButton(
                         onPressed: () {
-                          // Add forgot password logic
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordPage(),
+                            ),
+                          );
                         },
                         child: Text(
                           'نسيت كلمة المرور؟',

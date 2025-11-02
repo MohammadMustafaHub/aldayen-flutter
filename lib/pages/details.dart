@@ -1,6 +1,7 @@
 import 'package:aldayen/models/customer.dart';
 import 'package:aldayen/models/transaction.dart';
 import 'package:aldayen/pages/debts-management/create-debt.dart';
+import 'package:aldayen/pages/statistics.dart';
 import 'package:aldayen/pages/transactions/transactions_page.dart';
 import 'package:aldayen/services/customer_service.dart';
 import 'package:aldayen/services/transaction_service.dart';
@@ -154,7 +155,13 @@ class _DetailsPageState extends State<DetailsPage> {
                               title: 'الإحصائيات',
                               color: Colors.purple,
                               onTap: () {
-                                // Navigate to statistics
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const StatisticsPage(),
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -187,7 +194,7 @@ class _DetailsPageState extends State<DetailsPage> {
                 transactionsErrorMessage.isNotEmpty
                     ? SizedBox(
                         height: 140,
-                        child: Center(child: Text(transactionsErrorMessage!)),
+                        child: Center(child: Text(transactionsErrorMessage)),
                       )
                     : SizedBox(
                         height: 140,
@@ -230,7 +237,7 @@ class _DetailsPageState extends State<DetailsPage> {
                     ? Center(
                         child: SizedBox(
                           height: 140,
-                          child: Center(child: Text(customersErrorMessage!)),
+                          child: Center(child: Text(customersErrorMessage)),
                         ),
                       )
                     : isLoadingCustomers

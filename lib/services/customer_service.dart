@@ -75,7 +75,7 @@ class CustomerService {
       'api/customers',
       data: {
         'name': name,
-        'phone': phone,
+        'phoneNumber': phone,
         'amount': debt,
         'note': note,
         'paymentDue': dueDate?.toIso8601String(),

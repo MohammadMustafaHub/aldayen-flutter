@@ -493,7 +493,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
 
   Widget _buildDebtorCard(Customer customer) {
     final bool isOverdue =
-        customer.paymentDue != null &&
+        customer.paymentDue != null && customer.totalDebt > 0 &&
         customer.paymentDue!.isBefore(DateTime.now());
 
     return Container(

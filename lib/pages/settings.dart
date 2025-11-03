@@ -250,28 +250,28 @@ class _SettingsPageState extends State<SettingsPage> {
                           onTap: _handleChangePassword,
                           showDivider: true,
                         ),
-                        _buildSettingItem(
-                          icon: Icons.edit_outlined,
-                          title: 'تعديل الملف الشخصي',
-                          subtitle: 'قم بتحديث معلوماتك الشخصية',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('قريباً...')),
-                            );
-                          },
-                          showDivider: true,
-                        ),
-                        _buildSettingItem(
-                          icon: Icons.notifications_outlined,
-                          title: 'الإشعارات',
-                          subtitle: 'إدارة تفضيلات الإشعارات',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('قريباً...')),
-                            );
-                          },
-                          showDivider: false,
-                        ),
+                        // _buildSettingItem(
+                        //   icon: Icons.edit_outlined,
+                        //   title: 'تعديل الملف الشخصي',
+                        //   subtitle: 'قم بتحديث معلوماتك الشخصية',
+                        //   onTap: () {
+                        //     ScaffoldMessenger.of(context).showSnackBar(
+                        //       const SnackBar(content: Text('قريباً...')),
+                        //     );
+                        //   },
+                        //   showDivider: true,
+                        // ),
+                        // _buildSettingItem(
+                        //   icon: Icons.notifications_outlined,
+                        //   title: 'الإشعارات',
+                        //   subtitle: 'إدارة تفضيلات الإشعارات',
+                        //   onTap: () {
+                        //     ScaffoldMessenger.of(context).showSnackBar(
+                        //       const SnackBar(content: Text('قريباً...')),
+                        //     );
+                        //   },
+                        //   showDivider: false,
+                        // ),
                       ],
                     ),
                   ),
@@ -314,20 +314,20 @@ class _SettingsPageState extends State<SettingsPage> {
                           onTap: () {},
                           showDivider: true,
                         ),
-                        _buildSettingItem(
-                          icon: Icons.privacy_tip_outlined,
-                          title: 'سياسة الخصوصية',
-                          subtitle: 'اطلع على سياسة الخصوصية',
-                          onTap: () {},
-                          showDivider: true,
-                        ),
-                        _buildSettingItem(
-                          icon: Icons.description_outlined,
-                          title: 'الشروط والأحكام',
-                          subtitle: 'اطلع على الشروط والأحكام',
-                          onTap: () {},
-                          showDivider: false,
-                        ),
+                        // _buildSettingItem(
+                        //   icon: Icons.privacy_tip_outlined,
+                        //   title: 'سياسة الخصوصية',
+                        //   subtitle: 'اطلع على سياسة الخصوصية',
+                        //   onTap: () {},
+                        //   showDivider: true,
+                        // ),
+                        // _buildSettingItem(
+                        //   icon: Icons.description_outlined,
+                        //   title: 'الشروط والأحكام',
+                        //   subtitle: 'اطلع على الشروط والأحكام',
+                        //   onTap: () {},
+                        //   showDivider: false,
+                        // ),
                       ],
                     ),
                   ),

@@ -1,4 +1,7 @@
+import 'package:aldayen/services/stats_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart' as intl;
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -22,47 +25,74 @@ class _StatisticsPageState extends State<StatisticsPage> {
   String _maxDebtCustomerName = '-';
   String _minDebtCustomerName = '-';
 
+  // Cache variables
+  GetStatsResponse? _cachedResponse;
+  DateTime? _lastFetchTime;
+  static const Duration _cacheDuration = Duration(minutes: 5);
+
+  // Number formatter for currency
+  final intl.NumberFormat _currencyFormatter = intl.NumberFormat('#,###');
+
   @override
   void initState() {
     super.initState();
     _fetchStatistics();
   }
 
-  Future<void> _fetchStatistics() async {
+  Future<void> _fetchStatistics({bool forceRefresh = false}) async {
+    // Check if we have cached data and it's still valid
+    if (!forceRefresh &&
+        _cachedResponse != null &&
+        _lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) < _cacheDuration) {
+      // Use cached data
+      _updateUIWithResponse(_cachedResponse!);
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    // TODO: Implement your API call here
-    // Example:
-    // try {
-    //   final result = await yourService.fetchStatistics();
-    //   setState(() {
-    //     _totalDebt = result.totalDebt;
-    //     _maxDebt = result.maxDebt;
-    //     _minDebt = result.minDebt;
-    //     _averageDebt = result.averageDebt;
-    //     _totalCustomers = result.totalCustomers;
-    //     _customersWithDebts = result.customersWithDebts;
-    //     _upcomingDueDates = result.upcomingDueDates;
-    //     _overdueDebts = result.overdueDebts;
-    //     _maxDebtCustomerName = result.maxDebtCustomerName;
-    //     _minDebtCustomerName = result.minDebtCustomerName;
-    //     _isLoading = false;
-    //   });
-    // } catch (error) {
-    //   setState(() {
-    //     _errorMessage = 'فشل في تحميل الإحصائيات';
-    //     _isLoading = false;
-    //   });
-    // }
+    try {
+      final statsService = GetIt.I<StatsService>();
+      final response = await statsService.getStats();
 
-    // Temporary: Simulate loading
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _isLoading = false;
-    });
+      // Cache the response
+      _cachedResponse = response;
+      _lastFetchTime = DateTime.now();
+
+      setState(() {
+        _updateUIWithResponse(response);
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _errorMessage = 'فشل في تحميل الإحصائيات';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _updateUIWithResponse(GetStatsResponse response) {
+    _totalDebt = response.totalDebt;
+    _maxDebt = response.maxDebt;
+    _minDebt = response.minDebt;
+    _totalCustomers = response.totalCustomers;
+    _customersWithDebts = response.totalDebatedCustomers;
+    _upcomingDueDates = response.soonDueDateDebt;
+    _overdueDebts = response.overDueDateDebt;
+
+    // Calculate average debt
+    _averageDebt = _customersWithDebts > 0
+        ? _totalDebt / _customersWithDebts
+        : 0.0;
+
+    // Note: The API doesn't provide customer names for min/max debt
+    // You may need to add these fields to the API response
+    _maxDebtCustomerName = '-';
+    _minDebtCustomerName = '-';
   }
 
   @override
@@ -106,7 +136,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 ),
               )
             : RefreshIndicator(
-                onRefresh: _fetchStatistics,
+                onRefresh: () => _fetchStatistics(forceRefresh: true),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
@@ -117,7 +147,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         // Main Statistics Cards
                         _buildStatCard(
                           title: 'إجمالي الديون',
-                          value: '${_totalDebt.toStringAsFixed(2)} ر.س',
+                          value:
+                              '${_currencyFormatter.format(_totalDebt.toInt())} د.ع',
                           icon: Icons.account_balance_wallet,
                           color: const Color(0xFF003366),
                           subtitle: 'مجموع جميع الديون المستحقة',
@@ -130,7 +161,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             Expanded(
                               child: _buildSmallStatCard(
                                 title: 'أعلى دين',
-                                value: '${_maxDebt.toStringAsFixed(2)} ر.س',
+                                value:
+                                    '${_currencyFormatter.format(_maxDebt.toInt())} د.ع',
                                 icon: Icons.arrow_upward,
                                 color: Colors.red,
                                 subtitle: _maxDebtCustomerName,
@@ -140,7 +172,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             Expanded(
                               child: _buildSmallStatCard(
                                 title: 'أقل دين',
-                                value: '${_minDebt.toStringAsFixed(2)} ر.س',
+                                value:
+                                    '${_currencyFormatter.format(_minDebt.toInt())} د.ع',
                                 icon: Icons.arrow_downward,
                                 color: Colors.green,
                                 subtitle: _minDebtCustomerName,
@@ -155,7 +188,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             Expanded(
                               child: _buildSmallStatCard(
                                 title: 'متوسط الدين',
-                                value: '${_averageDebt.toStringAsFixed(2)} ر.س',
+                                value:
+                                    '${_currencyFormatter.format(_averageDebt.toInt())} د.ع',
                                 icon: Icons.trending_flat,
                                 color: Colors.orange,
                                 subtitle: 'لكل مدين',
@@ -195,7 +229,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                 value: '$_upcomingDueDates',
                                 icon: Icons.schedule,
                                 color: Colors.amber,
-                                subtitle: 'خلال 30 يوم',
+                                subtitle: 'خلال 5 يوم',
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -239,7 +273,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -250,7 +284,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: 36),
@@ -304,7 +338,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -312,11 +346,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -331,12 +366,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+          SizedBox(
+            height: 28,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -363,10 +406,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha:0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -411,7 +454,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         gradient: LinearGradient(
           colors: [
             const Color(0xFF003366),
-            const Color(0xFF003366).withValues(alpha:0.8),
+            const Color(0xFF003366).withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -419,7 +462,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF003366).withValues(alpha:0.3),
+            color: const Color(0xFF003366).withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -433,7 +476,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha:0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -479,7 +522,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           label,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.white.withValues(alpha:0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
         ),

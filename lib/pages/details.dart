@@ -1,6 +1,6 @@
 import 'package:aldayen/models/customer.dart';
 import 'package:aldayen/models/transaction.dart';
-import 'package:aldayen/pages/debts-management/create-debt.dart';
+import 'package:aldayen/pages/debts-management/create_debt.dart';
 import 'package:aldayen/pages/statistics.dart';
 import 'package:aldayen/pages/transactions/transactions_page.dart';
 import 'package:aldayen/services/customer_service.dart';
@@ -277,7 +277,7 @@ class _DetailsPageState extends State<DetailsPage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha:0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -288,7 +288,7 @@ class _DetailsPageState extends State<DetailsPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha:0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -320,7 +320,7 @@ class _DetailsPageState extends State<DetailsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -337,8 +337,8 @@ class _DetailsPageState extends State<DetailsPage> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isDeposit
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha:0.1)
+                      : Colors.red.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -408,13 +408,13 @@ class _DetailsPageState extends State<DetailsPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUrgent
-              ? Colors.red.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.2),
+              ? Colors.red.withValues(alpha:0.3)
+              : Colors.grey.withValues(alpha:0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -426,8 +426,8 @@ class _DetailsPageState extends State<DetailsPage> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isUrgent
-                  ? Colors.red.withOpacity(0.1)
-                  : const Color(0xFF003366).withOpacity(0.1),
+                  ? Colors.red.withValues(alpha:0.1)
+                  : const Color(0xFF003366).withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -473,8 +473,8 @@ class _DetailsPageState extends State<DetailsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isUrgent
-                      ? Colors.red.withOpacity(0.1)
-                      : Colors.orange.withOpacity(0.1),
+                      ? Colors.red.withValues(alpha:0.1)
+                      : Colors.orange.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(

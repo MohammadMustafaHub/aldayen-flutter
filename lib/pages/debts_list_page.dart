@@ -1,12 +1,12 @@
 import 'package:aldayen/models/customer.dart';
-import 'package:aldayen/pages/debts-management/create-debt.dart';
-import 'package:aldayen/pages/debts-management/update-debt.dart';
+import 'package:aldayen/pages/debts-management/create_debt.dart';
+import 'package:aldayen/pages/debts-management/update_debt.dart';
 import 'package:aldayen/services/customer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 class DebtsListPage extends StatefulWidget {
-  const DebtsListPage({Key? key}) : super(key: key);
+  const DebtsListPage({super.key});
 
   @override
   State<DebtsListPage> createState() => _DebtsListPageState();

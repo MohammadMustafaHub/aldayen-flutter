@@ -7,14 +7,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key? key}) : super(key: key);
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  
   String subscriptionEndDate = '2026-03-15';
   late AuthService _authService;
 
@@ -41,13 +40,17 @@ class _SettingsPageState extends State<SettingsPage> {
               TextButton(
                 onPressed: () async {
                   await _authService.logout();
-                  Navigator.pop(context); // Close dialog
-                  // Navigate to login and clear all previous routes
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                      (route) => false,
+                    );
+                  }
                 },
                 child: const Text(
                   'تسجيل الخروج',
@@ -64,9 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void _handleChangePassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const ChangePasswordPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
     );
   }
 
@@ -105,7 +106,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -117,7 +118,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF003366).withOpacity(0.1),
+                            color: const Color(
+                              0xFF003366,
+                            ).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -165,10 +168,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.green.withOpacity(0.3),
+                              color: Colors.green.withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -232,7 +235,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -296,7 +299,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -388,7 +391,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF003366).withOpacity(0.1),
+                    color: const Color(0xFF003366).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: const Color(0xFF003366), size: 24),

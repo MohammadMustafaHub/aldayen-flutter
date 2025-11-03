@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({Key? key}) : super(key: key);
+  const ForgotPasswordPage({super.key});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
@@ -64,8 +64,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  ChangePasswordOtpPage(phoneNumber: TransformPhoneNumber(_phoneController.text)!),
+              builder: (context) => ChangePasswordOtpPage(
+                phoneNumber: TransformPhoneNumber(_phoneController.text)!,
+              ),
             ),
           );
         } else {
@@ -126,7 +127,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF003366).withOpacity(0.3),
+                            color: const Color(0xFF003366).withValues(alpha:0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -247,7 +248,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           elevation: 5,
-                          shadowColor: const Color(0xFF003366).withOpacity(0.4),
+                          shadowColor: const Color(0xFF003366).withValues(alpha:0.4),
                         ),
                         child: _isLoading
                             ? const SizedBox(

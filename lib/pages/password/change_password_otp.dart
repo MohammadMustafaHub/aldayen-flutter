@@ -8,8 +8,7 @@ import 'package:get_it/get_it.dart';
 class ChangePasswordOtpPage extends StatefulWidget {
   final String phoneNumber;
 
-  const ChangePasswordOtpPage({Key? key, required this.phoneNumber})
-    : super(key: key);
+  const ChangePasswordOtpPage({super.key, required this.phoneNumber});
 
   @override
   State<ChangePasswordOtpPage> createState() => _ChangePasswordOtpPageState();
@@ -200,7 +199,7 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
                   height: 80,
                   width: 80,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF003366).withOpacity(0.1),
+                    color: const Color(0xFF003366).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -392,7 +391,7 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${_resendTimer.toString().padLeft(2, '0')}',
+                            _resendTimer.toString().padLeft(2, '0'),
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -417,10 +416,10 @@ class _ChangePasswordOtpPageState extends State<ChangePasswordOtpPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.blue.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),

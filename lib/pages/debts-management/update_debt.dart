@@ -9,7 +9,7 @@ import 'package:get_it/get_it.dart';
 class UpdateDebtPage extends StatefulWidget {
   final String debtId;
 
-  const UpdateDebtPage({Key? key, required this.debtId}) : super(key: key);
+  const UpdateDebtPage({super.key, required this.debtId});
 
   @override
   State<UpdateDebtPage> createState() => _UpdateDebtPageState();
@@ -172,43 +172,6 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
         _remaining = result.customer.totalDebt;
       });
     }
-  }
-
-  void _handleDeleteDebt() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            title: const Text('تأكيد الحذف'),
-            content: const Text(
-              'هل أنت متأكد من حذف هذا المدين وجميع معاملاته؟',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('إلغاء'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  // Simulate delete API call
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تم حذف المدين بنجاح'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  Navigator.pop(context); // Close update page
-                },
-                child: const Text('حذف', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -561,9 +524,9 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
     return Container(
       padding: EdgeInsets.all(isLarge ? 20 : 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -9,7 +9,7 @@ import 'package:get_it/get_it.dart';
 import 'login.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -110,7 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF003366).withOpacity(0.3),
+                            color: const Color(0xFF003366).withValues(alpha:0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -368,7 +368,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           elevation: 5,
-                          shadowColor: const Color(0xFF003366).withOpacity(0.4),
+                          shadowColor: const Color(0xFF003366).withValues(alpha:0.4),
                         ),
                         child: _isLoading
                             ? const SizedBox(
@@ -431,6 +431,4 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
-
-  
 }

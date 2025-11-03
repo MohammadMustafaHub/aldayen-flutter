@@ -4,7 +4,6 @@ import 'package:aldayen/services/user-service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'pages/login.dart';
 import 'pages/otp.dart';
@@ -20,7 +19,7 @@ runApp(
   );}
 
 class MyApp extends StatefulWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -40,9 +39,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadUser() async {
     try {
-      print(
-      await FlutterSecureStorage().read(key: 'refresh_token')
-      );
       final userOption = await _userService.getUser();
 
       if (!mounted) return;

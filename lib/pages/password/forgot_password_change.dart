@@ -8,10 +8,10 @@ class ForgotPasswordChangePage extends StatefulWidget {
   final String phoneNumber;
 
   const ForgotPasswordChangePage({
-    Key? key,
+    super.key,
     required this.token,
     required this.phoneNumber,
-  }) : super(key: key);
+  });
 
   @override
   State<ForgotPasswordChangePage> createState() =>
@@ -162,7 +162,7 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF003366).withOpacity(0.3),
+                            color: const Color(0xFF003366).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -355,7 +355,7 @@ class _ForgotPasswordChangePageState extends State<ForgotPasswordChangePage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           elevation: 5,
-                          shadowColor: const Color(0xFF003366).withOpacity(0.4),
+                          shadowColor: const Color(0xFF003366).withValues(alpha: 0.4),
                         ),
                         child: _isLoading
                             ? const SizedBox(

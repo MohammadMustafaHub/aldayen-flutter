@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 class CreateDebtPage extends StatefulWidget {
-  const CreateDebtPage({Key? key}) : super(key: key);
+  const CreateDebtPage({super.key});
 
   @override
   State<CreateDebtPage> createState() => _CreateDebtPageState();
@@ -166,7 +166,7 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                       height: 80,
                       width: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF003366).withOpacity(0.1),
+                        color: const Color(0xFF003366).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

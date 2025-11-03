@@ -1,4 +1,4 @@
-import 'package:aldayen/pages/debts-list.dart';
+import 'package:aldayen/pages/debts_list_page.dart';
 import 'package:aldayen/pages/details.dart';
 import 'package:aldayen/pages/settings.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +12,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
-  String userName = 'اسم المستخدم';
-  String userPhone = '05xxxxxxxx';
 
   late final List<Widget> _pages;
 

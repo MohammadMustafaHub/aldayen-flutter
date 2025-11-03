@@ -5,8 +5,7 @@ import 'package:intl/intl.dart';
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
 
-  const TransactionCard({Key? key, required this.transaction})
-    : super(key: key);
+  const TransactionCard({super.key, required this.transaction});
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +25,8 @@ class TransactionCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isPayment
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.red.withOpacity(0.1),
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

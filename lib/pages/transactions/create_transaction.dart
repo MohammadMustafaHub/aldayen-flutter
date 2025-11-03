@@ -6,8 +6,7 @@ import 'package:get_it/get_it.dart';
 class CreateTransactionPage extends StatefulWidget {
   final Customer customer;
 
-  const CreateTransactionPage({Key? key, required this.customer})
-    : super(key: key);
+  const CreateTransactionPage({super.key, required this.customer});
 
   @override
   State<CreateTransactionPage> createState() => _CreateTransactionPageState();
@@ -107,10 +106,10 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF003366).withOpacity(0.1),
+                      color: const Color(0xFF003366).withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF003366).withOpacity(0.3),
+                        color: const Color(0xFF003366).withValues(alpha:0.3),
                         width: 1,
                       ),
                     ),
@@ -119,7 +118,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF003366).withOpacity(0.2),
+                            color: const Color(0xFF003366).withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -184,7 +183,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: _transactionType == 'payment'
-                                  ? Colors.green.withOpacity(0.1)
+                                  ? Colors.green.withValues(alpha:0.1)
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
@@ -243,7 +242,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: _transactionType == 'debt'
-                                  ? Colors.red.withOpacity(0.1)
+                                  ? Colors.red.withValues(alpha:0.1)
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(

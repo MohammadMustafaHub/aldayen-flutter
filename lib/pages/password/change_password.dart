@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({Key? key}) : super(key: key);
+  const ChangePasswordPage({super.key});
 
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
@@ -102,7 +102,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF003366).withOpacity(0.3),
+                            color: const Color(0xFF003366).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -355,7 +355,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           elevation: 5,
-                          shadowColor: const Color(0xFF003366).withOpacity(0.4),
+                          shadowColor: const Color(0xFF003366).withValues(alpha: 0.4),
                         ),
                         child: _isLoading
                             ? const SizedBox(

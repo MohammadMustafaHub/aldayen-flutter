@@ -152,7 +152,7 @@ class _OtpPageState extends State<OtpPage> {
               tooltip: 'تسجيل الخروج',
               onPressed: () async {
                 await _authService.logout();
-                if(mounted) {
+                if (mounted) {
                   context.read<UserCubit>().setUser(null);
                   Navigator.pushReplacement(
                     context,
@@ -176,7 +176,7 @@ class _OtpPageState extends State<OtpPage> {
                   height: 100,
                   width: 100,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF003366).withOpacity(0.1),
+                    color: const Color(0xFF003366).withValues(alpha:0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -392,10 +392,10 @@ class _OtpPageState extends State<OtpPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.blue.withValues(alpha:0.3),
                       width: 1,
                     ),
                   ),

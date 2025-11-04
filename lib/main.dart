@@ -11,12 +11,8 @@ import 'pages/otp.dart';
 void main() {
   SetupDependencies();
 
-runApp(
-    BlocProvider(
-      create: (_) => UserCubit(),
-      child: MyApp(),
-    ),
-  );}
+  runApp(BlocProvider(create: (_) => UserCubit(), child: MyApp()));
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -47,7 +43,6 @@ class _MyAppState extends State<MyApp> {
         userOption.match(
           () {
             context.read<UserCubit>().setUser(null);
-
           },
           (user) {
             context.read<UserCubit>().setUser(user);

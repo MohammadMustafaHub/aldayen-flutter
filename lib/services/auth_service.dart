@@ -38,7 +38,6 @@ class AuthService {
         User.fromJson(response.data!['user'] as Map<String, dynamic>),
       );
     } on DioException catch (e) {
-      print('Login error: ${e.response?.data}');
 
       if (e.response?.data != null && e.response?.data["errors"] != null) {
         var errorResponse = ApiErrorResponse.fromJson(
@@ -58,7 +57,6 @@ class AuthService {
         ),
       );
     } catch (e) {
-      print('Unexpected error: $e');
       return left(
         ApiErrorResponse(
           errors: [

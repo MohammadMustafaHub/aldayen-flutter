@@ -7,6 +7,7 @@ import 'package:aldayen/services/customer_service.dart';
 import 'package:aldayen/services/transaction_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart' as intl;
 
 class DetailsPage extends StatefulWidget {
   final VoidCallback? onNavigateToDebts;
@@ -393,7 +394,7 @@ class _DetailsPageState extends State<DetailsPage> {
           ),
           const SizedBox(height: 2),
           Text(
-            transaction.createdAt.toString(),
+            intl.DateFormat("yyyy-MM-dd").format(transaction.createdAt),
             style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -39,8 +39,7 @@ class _MyAppState extends State<MyApp> {
 
       if (!mounted) return;
 
-      setState(() {
-        userOption.match(
+      userOption.match(
           () {
             context.read<UserCubit>().setUser(null);
           },
@@ -48,8 +47,6 @@ class _MyAppState extends State<MyApp> {
             context.read<UserCubit>().setUser(user);
           },
         );
-        // 2. Turn off loading, no matter what
-      });
     } catch (e) {
       if (mounted) {
         setState(() {

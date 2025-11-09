@@ -1,5 +1,5 @@
 import 'package:aldayen/providers/app_client.dart';
-import 'package:aldayen/services/auth-service.dart';
+import 'package:aldayen/services/auth_service.dart';
 import 'package:aldayen/services/customer_service.dart';
 import 'package:aldayen/services/password_service.dart';
 import 'package:aldayen/services/stats_service.dart';

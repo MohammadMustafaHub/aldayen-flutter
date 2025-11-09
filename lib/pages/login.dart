@@ -1,7 +1,7 @@
 import 'package:aldayen/pages/home.dart';
 import 'package:aldayen/pages/otp.dart';
 import 'package:aldayen/pages/password/change_password_page.dart';
-import 'package:aldayen/services/auth-service.dart';
+import 'package:aldayen/services/auth_service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:aldayen/utils/transform_phone_number.dart';
 import 'package:flutter/material.dart';

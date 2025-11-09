@@ -1,10 +1,11 @@
 import 'package:aldayen/pages/login.dart';
 import 'package:aldayen/pages/password/change_password.dart';
-import 'package:aldayen/services/auth-service.dart';
+import 'package:aldayen/services/auth_service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart' as intl;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,7 +15,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String subscriptionEndDate = '2026-03-15';
   late AuthService _authService;
 
   @override
@@ -195,7 +195,14 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                   ),
                                   Text(
-                                    subscriptionEndDate,
+                                    intl.DateFormat(
+                                      "dd-MM-yyyy",
+                                    ).format(
+                                      state
+                                          .user!
+                                          .tenantInfo
+                                          .subscriptionEndDate,
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,

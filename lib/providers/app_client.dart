@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// final _appUrl = 'https://aldayen.sliplane.app/';
-final _appUrl = 'http://localhost:5121/';
+final _appUrl = 'https://aldayen-api.webchy.dev/';
+// final _appUrl = 'http://localhost:5121/';
 
 Dio CreateAppClient() {
   final client = Dio(

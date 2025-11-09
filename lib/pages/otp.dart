@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:aldayen/pages/Home.dart';
 import 'package:aldayen/pages/login.dart';
-import 'package:aldayen/services/auth-service.dart';
+import 'package:aldayen/services/auth_service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

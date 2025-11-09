@@ -40,9 +40,6 @@ class _HomePageState extends State<HomePage> {
     final subscriptionEndDate = state.user!.tenantInfo.subscriptionEndDate;
     final now = DateTime.now();
 
-    print(state.user!.tenantInfo.subscriptionEndDate);
-    print(now);
-
     return subscriptionEndDate.isBefore(now);
   }
 

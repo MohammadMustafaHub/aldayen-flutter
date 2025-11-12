@@ -1,5 +1,6 @@
 import 'package:aldayen/pages/login.dart';
 import 'package:aldayen/pages/password/change_password.dart';
+import 'package:aldayen/pages/settings/subscription.dart';
 import 'package:aldayen/services/auth_service.dart';
 import 'package:aldayen/state-management/user-state.dart';
 import 'package:flutter/material.dart';
@@ -195,9 +196,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                   ),
                                   Text(
-                                    intl.DateFormat(
-                                      "dd-MM-yyyy",
-                                    ).format(
+                                    intl.DateFormat("dd-MM-yyyy").format(
                                       state
                                           .user!
                                           .tenantInfo
@@ -255,6 +254,20 @@ class _SettingsPageState extends State<SettingsPage> {
                           title: 'تغيير كلمة المرور',
                           subtitle: 'قم بتحديث كلمة المرور الخاصة بك',
                           onTap: _handleChangePassword,
+                          showDivider: true,
+                        ),
+                        _buildSettingItem(
+                          icon: Icons.subscriptions_outlined,
+                          title: 'الاشتراك',
+                          subtitle: 'تفاصيل اشتراكك الحالي',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SubscriptionPage(),
+                              ),
+                            );
+                          },
                           showDivider: true,
                         ),
                         // _buildSettingItem(

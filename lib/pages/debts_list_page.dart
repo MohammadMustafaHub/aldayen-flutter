@@ -212,7 +212,9 @@ class _DebtsListPageState extends State<DebtsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF003366).withValues(alpha: 0.1) : null,
+          color: isSelected
+              ? const Color(0xFF003366).withValues(alpha: 0.1)
+              : null,
           border: Border(
             right: BorderSide(
               color: isSelected ? const Color(0xFF003366) : Colors.transparent,
@@ -493,7 +495,8 @@ class _DebtsListPageState extends State<DebtsListPage> {
 
   Widget _buildDebtorCard(Customer customer) {
     final bool isOverdue =
-        customer.paymentDue != null && customer.totalDebt > 0 &&
+        customer.paymentDue != null &&
+        customer.totalDebt > 0 &&
         customer.paymentDue!.isBefore(DateTime.now());
 
     return Container(
@@ -596,7 +599,7 @@ class _DebtsListPageState extends State<DebtsListPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${customer.totalDebt.toStringAsFixed(0)} د.ع',
+                      '${customer.totalDebt} د.ع',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

@@ -15,6 +15,7 @@ class CreateTransactionPage extends StatefulWidget {
 class _CreateTransactionPageState extends State<CreateTransactionPage> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _noteController = TextEditingController();
   final TransactionService _transactionService = GetIt.I<TransactionService>();
 
   String _transactionType = 'payment'; // 'payment' or 'debt'
@@ -23,6 +24,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
   @override
   void dispose() {
     _amountController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -33,10 +35,13 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
       });
 
       final amount = double.parse(_amountController.text);
+      final note = _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim();
 
       final result = _transactionType == 'payment'
           ? await _transactionService.PayDebt(widget.customer.id, amount)
-          : await _transactionService.AddDebt(widget.customer.id, amount);
+          : await _transactionService.AddDebt(widget.customer.id, amount, note);
 
       setState(() {
         _isLoading = false;
@@ -106,10 +111,10 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF003366).withValues(alpha:0.1),
+                      color: const Color(0xFF003366).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF003366).withValues(alpha:0.3),
+                        color: const Color(0xFF003366).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -118,7 +123,9 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF003366).withValues(alpha:0.2),
+                            color: const Color(
+                              0xFF003366,
+                            ).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -183,7 +190,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: _transactionType == 'payment'
-                                  ? Colors.green.withValues(alpha:0.1)
+                                  ? Colors.green.withValues(alpha: 0.1)
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
@@ -242,7 +249,7 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: _transactionType == 'debt'
-                                  ? Colors.red.withValues(alpha:0.1)
+                                  ? Colors.red.withValues(alpha: 0.1)
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
@@ -359,6 +366,54 @@ class _CreateTransactionPageState extends State<CreateTransactionPage> {
                       return null;
                     },
                   ),
+
+                  // Note Field (only for debt)
+                  if (_transactionType == 'debt') ...[
+                    const SizedBox(height: 32),
+                    Text(
+                      'ملاحظة (اختياري)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _noteController,
+                      maxLines: 3,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF003366),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'أضف ملاحظة للدين...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[400],
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF003366),
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.all(16),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 40),
 
                   // Create Button

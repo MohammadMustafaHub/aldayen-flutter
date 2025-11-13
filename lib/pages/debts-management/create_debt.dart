@@ -227,7 +227,7 @@ class _CreateDebtPageState extends State<CreateDebtPage> {
                     style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       labelText: 'رقم الهاتف (اختياري)',
-                      hintText: '05xxxxxxxx',
+                      hintText: '07xxxxxxxx',
                       prefixIcon: const Icon(
                         Icons.phone,
                         color: Color(0xFF003366),

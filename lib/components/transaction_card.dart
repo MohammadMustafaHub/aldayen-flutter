@@ -14,7 +14,6 @@ class TransactionCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -26,75 +25,115 @@ class TransactionCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon based on transaction type
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isPayment
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isPayment ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isPayment ? Colors.green : Colors.red,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Transaction details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Row(
+                // Icon based on transaction type
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPayment
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isPayment ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: isPayment ? Colors.green : Colors.red,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Transaction details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            isPayment ? 'إيداع' : 'دين جديد',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (transaction.customerName != null &&
+                          transaction.customerName!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          transaction.customerName!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF003366),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        dateStr,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+                // Amount
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      isPayment ? 'إيداع' : 'دين جديد',
+                      '${transaction.amount.toStringAsFixed(0)} د.ع',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isPayment ? Colors.green : Colors.red,
                       ),
                     ),
                   ],
                 ),
-                if (transaction.customerName != null &&
-                    transaction.customerName!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    transaction.customerName!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF003366),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 4),
-                Text(
-                  dateStr,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
               ],
             ),
           ),
-          // Amount
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${transaction.amount.toStringAsFixed(0)} د.ع',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isPayment ? Colors.green : Colors.red,
+          // Note section (only for debt transactions)
+          if (!isPayment &&
+              transaction.note != null &&
+              transaction.note!.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.05),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
               ),
-            ],
-          ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.note_outlined, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      transaction.note!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

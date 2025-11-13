@@ -13,10 +13,15 @@ class TransactionService {
     _dio = GetIt.I<Dio>();
   }
 
-  Future<Either<ApiErrorResponse, CustomerWithTransactions>> AddDebt(String customerId, double amount) async {
-    final res = await _dio.post('api/debt/add-debt/$customerId', data: {
-      'amount': amount,
-    });
+  Future<Either<ApiErrorResponse, CustomerWithTransactions>> AddDebt(
+    String customerId,
+    double amount,
+    String? note,
+  ) async {
+    final res = await _dio.post(
+      'api/debt/add-debt/$customerId',
+      data: {'amount': amount, 'note': note},
+    );
 
     if (res.statusCode == 200) {
       return Right(CustomerWithTransactions.fromJson(res.data));
@@ -25,10 +30,14 @@ class TransactionService {
     }
   }
 
-  Future<Either<ApiErrorResponse, CustomerWithTransactions>> PayDebt(String customerId, double amount) async {
-    final res = await _dio.post('api/debt/add-payment/$customerId', data: {
-      'amount': amount,
-    });
+  Future<Either<ApiErrorResponse, CustomerWithTransactions>> PayDebt(
+    String customerId,
+    double amount,
+  ) async {
+    final res = await _dio.post(
+      'api/debt/add-payment/$customerId',
+      data: {'amount': amount},
+    );
 
     if (res.statusCode == 200) {
       return Right(CustomerWithTransactions.fromJson(res.data));
@@ -37,13 +46,11 @@ class TransactionService {
     }
   }
 
-  Future<Either<ApiErrorResponse, PaginatedResponse<Transaction>>> getTransactions(int page, int pageSize) async {
+  Future<Either<ApiErrorResponse, PaginatedResponse<Transaction>>>
+  getTransactions(int page, int pageSize) async {
     final response = await _dio.get(
       'api/transactions',
-      queryParameters: {
-        'page': page,
-        'pageSize': pageSize,
-      },
+      queryParameters: {'page': page, 'pageSize': pageSize},
     );
 
     if (response.statusCode == 200) {

@@ -4,12 +4,14 @@ class Transaction {
   final DateTime createdAt;
   final TransactionType type;
   final String? customerName;
+  final String? note;
   Transaction({
     required this.id,
     required this.amount,
     required this.createdAt,
     required this.type,
     this.customerName,
+    this.note,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class Transaction {
           ? TransactionType.payment
           : TransactionType.debit,
       customerName: json['customer']?['customerName'] as String?,
+      note: json['note'] as String?,
     );
   }
 
@@ -30,6 +33,7 @@ class Transaction {
       'amount': amount,
       'createdAt': createdAt.toIso8601String(),
       'type': type == TransactionType.payment ? 'payment' : 'debit',
+      'note': note,
     };
   }
 }

@@ -322,7 +322,7 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                 style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
                   labelText: 'رقم الهاتف (اختياري)',
-                  hintText: '05xxxxxxxx',
+                  hintText: '07xxxxxxxx',
                   prefixIcon: const Icon(Icons.phone, color: Color(0xFF003366)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -400,40 +400,6 @@ class _UpdateDebtPageState extends State<UpdateDebtPage>
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Notes Field
-              TextFormField(
-                controller: _notesController,
-                keyboardType: TextInputType.multiline,
-                maxLines: 4,
-                style: const TextStyle(fontSize: 16),
-                decoration: InputDecoration(
-                  labelText: 'ملاحظات (اختياري)',
-                  hintText: 'أضف أي ملاحظات إضافية...',
-                  prefixIcon: const Padding(
-                    padding: EdgeInsets.only(bottom: 60),
-                    child: Icon(Icons.note_outlined, color: Color(0xFF003366)),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF003366),
-                      width: 2,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 32),
 
               // Action Buttons
               Row(
